@@ -3,6 +3,13 @@ A port of [Alex Littlejohn's][alex] ALRadialMenu https://github.com/AlexLittlejo
 
 ![gif][gif]
 
+## Installing
+Grab it fron NuGet
+
+```
+PM> Install-Package ALRadialMenu
+```
+
 ## Usage
 The ALRadialMenu is fluent library, meaning all setter methods are chainable.
 
