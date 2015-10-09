@@ -1,6 +1,8 @@
 # ALRadialMenu
 A port of [Alex Littlejohn's][alex] ALRadialMenu https://github.com/AlexLittlejohn/ALRadialMenu
 
+![gif](http://zippy.gfycat.com/BlandNaturalAnglerfish.gif)
+
 ## Usage
 The ALRadialMenu is fluent library, meaning all setter methods are chainable.
 
