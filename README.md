@@ -27,7 +27,7 @@ radialMenu
 	.PresentInView(View); // which view to display it in
 ```
 
-Displayin the menu in a window
+Displaying the menu in a window
 
 ```
 radialMenu
