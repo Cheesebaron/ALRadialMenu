@@ -4,7 +4,7 @@ A port of [Alex Littlejohn's][alex] ALRadialMenu https://github.com/AlexLittlejo
 ![gif][gif]
 
 ## Installing
-Grab it fron NuGet
+Grab it from NuGet
 
 ```
 PM> Install-Package ALRadialMenu
