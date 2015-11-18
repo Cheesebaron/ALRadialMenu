@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
   <metadata>
     <id>ALRadialMenu</id>
-    <version>0.0.2</version>
+    <version>0.0.4</version>
     <title>ALRadialMenu</title>
     <authors>Tomasz Cielecki</authors>
     <owners>Tomasz Cielecki</owners>
@@ -13,7 +13,9 @@
     <copyright>Copyright 2015 Tomasz Cielecki</copyright>
     <tags>menu radial ios xamarin</tags>
 	<releaseNotes>
-0.0.2
+0.0.4
+Fix overlay on rotation
+0.0.2-0.0.3
 Make Dismiss public
 Added XML docs
 	</releaseNotes>

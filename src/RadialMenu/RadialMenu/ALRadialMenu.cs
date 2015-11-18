@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using CoreGraphics;
+using Foundation;
 using UIKit;
 
 namespace DK.Ostebaronen.Touch.RadialMenu
@@ -11,7 +12,7 @@ namespace DK.Ostebaronen.Touch.RadialMenu
     {
         private UITapGestureRecognizer _dismissGesture;
         private bool _dismissOnOverlayTap = true;
-        private readonly UIView _overlayView = new UIView(UIScreen.MainScreen.Bounds);
+        private UIView _overlayView;
         private double _delay;
         private IList<ALRadialMenuButton> _buttons;
         private float _radius = 100f;
@@ -19,6 +20,7 @@ namespace DK.Ostebaronen.Touch.RadialMenu
         private Angle _circumference = new Angle { Degrees = 360f };
         private Angle _spacingDegrees;
         private CGPoint _animationOrigin;
+        private readonly NSObject _orientationToken;
         private const UIViewAnimationOptions AnimationOptions = UIViewAnimationOptions.CurveEaseInOut | UIViewAnimationOptions.BeginFromCurrentState;
 
         private IList<ALRadialMenuButton> Buttons
@@ -41,16 +43,34 @@ namespace DK.Ostebaronen.Touch.RadialMenu
             }
         }
 
-        public ALRadialMenu() : base(CGRect.Empty) { CommonInit(); }
-        public ALRadialMenu(CGRect frame) : base(frame) { CommonInit(); }
+        public ALRadialMenu() : this(CGRect.Empty) { }
+
+        public ALRadialMenu(CGRect frame) : base(frame)
+        {
+            _orientationToken = UIDevice.Notifications.ObserveOrientationDidChange(OnOrientationChanged);
+            CommonInit();
+        }
+
+        private void OnOrientationChanged(object sender, NSNotificationEventArgs args)
+        {
+            CommonInit();
+        }
 
         private void CommonInit()
         {
+            _dismissGesture?.Dispose();
+            _dismissGesture = null;
+
+            _overlayView?.RemoveFromSuperview();
+            _overlayView?.Dispose();
+            _overlayView = null;
+
             _dismissGesture = new UITapGestureRecognizer(() => Dismiss())
             {
                 Enabled = _dismissOnOverlayTap
             };
 
+            _overlayView = new UIView(UIScreen.MainScreen.Bounds);
             _overlayView.AddGestureRecognizer(_dismissGesture);
         }
 
@@ -279,6 +299,14 @@ namespace DK.Ostebaronen.Touch.RadialMenu
                 count--;
 
             _spacingDegrees = new Angle { Degrees = Circumference.Degrees / count };
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+                _orientationToken.Dispose();
+
+            base.Dispose(disposing);
         }
     }
 }
