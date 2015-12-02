@@ -21,7 +21,7 @@ namespace DK.Ostebaronen.Touch.RadialMenu
         private Angle _spacingDegrees;
         private CGPoint _animationOrigin;
         private readonly NSObject _orientationToken;
-        private const UIViewAnimationOptions AnimationOptions = UIViewAnimationOptions.CurveEaseInOut | UIViewAnimationOptions.BeginFromCurrentState;
+        private const UIViewAnimationOptions AnimationOptions = UIViewAnimationOptions.CurveEaseInOut;
 
         private IList<ALRadialMenuButton> Buttons
         {
@@ -103,7 +103,7 @@ namespace DK.Ostebaronen.Touch.RadialMenu
                 var index = i;
                 button.Action = () => {
                     Dismiss(index);
-                    action();
+                    action?.Invoke();
                 };
             }
 
@@ -264,8 +264,7 @@ namespace DK.Ostebaronen.Touch.RadialMenu
                     view.Alpha = 0;
                     view.Center = _animationOrigin;
                 }, finished => {
-                    if (finished)
-                        view.RemoveFromSuperview();
+                    view.RemoveFromSuperview();
                 });
         }
 
