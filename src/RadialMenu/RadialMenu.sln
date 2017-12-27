@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.23107.0
+# Visual Studio 15
+VisualStudioVersion = 15.0.27205.2004
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RadialMenu", "RadialMenu\RadialMenu.csproj", "{0C591965-B68D-4F64-857A-B1D563CB8C5C}"
 EndProject
@@ -64,11 +64,12 @@ Global
 		{AAE6BD0B-D280-4813-8E3A-359FDBB8E612}.Debug|iPhoneSimulator.Build.0 = Debug|iPhoneSimulator
 		{AAE6BD0B-D280-4813-8E3A-359FDBB8E612}.Release|Any CPU.ActiveCfg = Release|iPhone
 		{AAE6BD0B-D280-4813-8E3A-359FDBB8E612}.Release|iPhone.ActiveCfg = Release|iPhone
-		{AAE6BD0B-D280-4813-8E3A-359FDBB8E612}.Release|iPhone.Build.0 = Release|iPhone
 		{AAE6BD0B-D280-4813-8E3A-359FDBB8E612}.Release|iPhoneSimulator.ActiveCfg = Release|iPhoneSimulator
-		{AAE6BD0B-D280-4813-8E3A-359FDBB8E612}.Release|iPhoneSimulator.Build.0 = Release|iPhoneSimulator
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {ABE77703-81B5-48D9-BE59-BBF64BA9EECE}
 	EndGlobalSection
 EndGlobal
