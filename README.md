@@ -3,6 +3,8 @@ A port of [Alex Littlejohn's][alex] ALRadialMenu https://github.com/AlexLittlejo
 
 ![gif][gif]
 
+[![Build status](https://ci.appveyor.com/api/projects/status/ynstnlywkhrbcttd?svg=true)](https://ci.appveyor.com/project/Cheesebaron/alradialmenu)
+
 ## Installing
 Grab it from NuGet
 
@@ -18,12 +20,13 @@ Initializing the menu
 ```
 var radialMenu = 
     new ALRadialMenu()
-		.SetButtons(buttons) // sets the button to display
-		.SetDelay(0.125) // delay between animation for each button. Default 0
-		.SetCircumference(90) // circumference of the menu. Default 360
-		.SetRadius(66f) // radius or distance from the center. Default 100
-		.SetDismissOnOverlayTap(true) // dismiss when tapping overlay. Default true
-		.SetStartAngle(180); // angle where first button is drawn. Default 270
+        .SetButtons(buttons) // sets the button to display
+        .SetDelay(0.125) // delay between animation for each button. Default 0
+        .SetCircumference(90) // circumference of the menu. Default 360
+        .SetRadius(66f) // radius or distance from the center. Default 100
+        .SetDismissOnOverlayTap(true) // dismiss when tapping overlay. Default true
+        .SetStartAngle(180) // angle where first button is drawn. Default 270
+        .SetOverlayCancelsTouchesInView(false); // set whether overlay cancels touches in views below. Default true
 ```
 
 Displaying the menu in a view
@@ -31,14 +34,14 @@ Displaying the menu in a view
 ```
 radialMenu
     .SetAnimationOrigin(new CGRect(50, 100)) // where to display the menu
-	.PresentInView(View); // which view to display it in
+    .PresentInView(View); // which view to display it in
 ```
 
 Displaying the menu in a window
 
 ```
 radialMenu
-	.PresentInWindow(View.Window); // which window to display it in
+    .PresentInWindow(View.Window); // which window to display it in
 ```
 
 # License
