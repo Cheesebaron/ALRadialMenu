@@ -1,0 +1,11 @@
+version: 1.0.{build}
+image: Visual Studio 2017
+build_script:
+- ps: .\build.ps1
+test: off
+deploy:
+- provider: NuGet
+  api_key:
+    secure: ePWFrmewEMaED2XFCsFRojYW3kxvW76CVHU1Q/NleBly2EsZKemk0sEgmUJk9gUq
+  on:
+    appveyor_repo_tag: true
