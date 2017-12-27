@@ -16,8 +16,11 @@ namespace Sample
             base.ViewDidLoad();
 
             Title = "Touch me!";
-            
-            var gesture = new UITapGestureRecognizer(ShowMenu);
+
+            var gesture = new UITapGestureRecognizer(ShowMenu)
+            {
+                CancelsTouchesInView = false
+            };
             View.AddGestureRecognizer(gesture);
             View.BackgroundColor = UIColor.White;
 
@@ -31,10 +34,38 @@ namespace Sample
                     View.BackgroundColor = color;
                 }));
 
-            _radialMenu = new ALRadialMenu()
-                .SetButtons(_buttons)
-                .SetDelay(0.125);
+            _radialMenu = new ALRadialMenu().SetButtons(_buttons).SetDelay(0.125);
+
+
+            // Play with the following code if you want to pass through touch events through overlay
+            //.SetOverlayCancelsTouchesInView(false);
+
+            //_someButton = new UIButton();
+            //_someButton.SetTitle("Wow!", UIControlState.Normal);
+            //_someButton.TouchUpInside += SomeButtonOnTouchUpInside;
+            //_someButton.SizeToFit();
+            //_someButton.Frame = new CGRect(GetRandomPointWithinBounds(View.Bounds), _someButton.Frame.Size);
+
+            //View.Add(_someButton);
         }
+
+        //private UIButton _someButton;
+        //private void SomeButtonOnTouchUpInside(object sender, EventArgs eventArgs)
+        //{
+        //    var button = (UIButton) sender;
+        //    Title = "Wow!";
+        //    var newCenter = GetRandomPointWithinBounds(View.Bounds);
+        //    button.Center = newCenter;
+        //}
+
+        //private static readonly Random Random = new Random();
+        //private static CGPoint GetRandomPointWithinBounds(CGRect bounds)
+        //{
+        //    var x = Random.Next((int)bounds.Left, (int)bounds.Right);
+        //    var y = Random.Next((int)bounds.Top, (int)bounds.Bottom);
+
+        //    return new CGPoint(x, y);
+        //}
 
         private void ShowMenu(UITapGestureRecognizer sender)
         {

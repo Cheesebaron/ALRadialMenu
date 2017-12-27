@@ -2,9 +2,19 @@
 
 namespace DK.Ostebaronen.Touch.RadialMenu
 {
-    internal struct Angle
+    /// <summary>
+    /// Class to represent angle along with conversion helpers
+    /// </summary>
+    public struct Angle
     {
+        /// <summary>
+        /// Angle in degrees
+        /// </summary>
         public float Degrees { get; set; }
-        public float ToRadians() { return Degrees * ((float)Math.PI / 180.0f); }
+
+        /// <summary>
+        /// Angle in radians
+        /// </summary>
+        public float Radians => Degrees* ((float) Math.PI / 180.0f);
     }
 }

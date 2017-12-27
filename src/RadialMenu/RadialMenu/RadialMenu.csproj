@@ -37,6 +37,7 @@
     <Compile Include="ALRadialMenuButton.cs" />
     <Compile Include="Angle.cs" />
     <Compile Include="ALRadialMenu.cs" />
+    <Compile Include="PassThroughView.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

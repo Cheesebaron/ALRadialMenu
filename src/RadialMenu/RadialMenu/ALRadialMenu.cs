@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using CoreGraphics;
@@ -8,24 +9,24 @@ using UIKit;
 
 namespace DK.Ostebaronen.Touch.RadialMenu
 {
+    [Preserve(AllMembers = true)]
     public class ALRadialMenu : UIButton
     {
         private UITapGestureRecognizer _dismissGesture;
         private bool _dismissOnOverlayTap = true;
-        private UIView _overlayView;
+        private bool _overlayCancelsTouchesInView = true;
+        private PassThroughView _overlayView;
         private double _delay;
-        private IList<ALRadialMenuButton> _buttons;
+        private IReadOnlyList<ALRadialMenuButton> _buttons;
         private float _radius = 100f;
-        private Angle _startAngle = new Angle { Degrees = 270f };
         private Angle _circumference = new Angle { Degrees = 360f };
-        private Angle _spacingDegrees;
         private CGPoint _animationOrigin;
         private readonly NSObject _orientationToken;
         private const UIViewAnimationOptions AnimationOptions = UIViewAnimationOptions.CurveEaseInOut;
 
-        private IList<ALRadialMenuButton> Buttons
+        private IReadOnlyList<ALRadialMenuButton> Buttons
         {
-            get { return _buttons; }
+            get => _buttons;
             set
             {
                 _buttons = value;
@@ -33,15 +34,43 @@ namespace DK.Ostebaronen.Touch.RadialMenu
             }
         }
 
-        private Angle Circumference
+        /// <summary>
+        /// Get or set the circumference of the menu
+        /// </summary>
+        public Angle Circumference
         {
-            get { return _circumference; }
+            get => _circumference;
             set
             {
                 _circumference = value;
                 CalculateSpacing();
             }
         }
+
+        /// <summary>
+        /// Get the start angle
+        /// </summary>
+        public Angle StartAngle { get; private set; } = new Angle { Degrees = 270f };
+
+        /// <summary>
+        /// Get the spacing in degrees between buttons
+        /// </summary>
+        public Angle Spacing { get; private set; }
+
+        /// <summary>
+        /// Get or set the animation action to use when presenting a button
+        /// </summary>
+        public Action<UIView, int> PresentButtonAnimation { get; set; }
+
+        /// <summary>
+        /// Get or set the animation action to use when dismissing a button
+        /// </summary>
+        public Action<UIView, int> DismissButtonAnimation { get; set; }
+
+        /// <summary>
+        /// Get or set the animation action to use when a button is selected
+        /// </summary>
+        public Action<UIView> SelectedButtonAnimation { get; set; }
 
         public ALRadialMenu() : this(CGRect.Empty) { }
 
@@ -65,12 +94,15 @@ namespace DK.Ostebaronen.Touch.RadialMenu
             _overlayView?.Dispose();
             _overlayView = null;
 
-            _dismissGesture = new UITapGestureRecognizer(() => Dismiss())
+            _dismissGesture = new UITapGestureRecognizer(InternalDismiss)
             {
-                Enabled = _dismissOnOverlayTap
+                Enabled = _dismissOnOverlayTap,
+                CancelsTouchesInView = _overlayCancelsTouchesInView
             };
 
-            _overlayView = new UIView(UIScreen.MainScreen.Bounds);
+            _overlayView = new PassThroughView(UIScreen.MainScreen.Bounds) {
+                PassThroughTouchEvents = !_overlayCancelsTouchesInView
+            };
             _overlayView.AddGestureRecognizer(_dismissGesture);
         }
 
@@ -92,7 +124,7 @@ namespace DK.Ostebaronen.Touch.RadialMenu
         /// <returns><see cref="ALRadialMenu"/> for method chaining.</returns>
         public ALRadialMenu SetButtons(IList<ALRadialMenuButton> buttons)
         {
-            Buttons = buttons;
+            Buttons = new ReadOnlyCollection<ALRadialMenuButton>(buttons);
 
             for (var i = 0; i < Buttons.Count; i++)
             {
@@ -126,6 +158,22 @@ namespace DK.Ostebaronen.Touch.RadialMenu
         }
 
         /// <summary>
+        /// Set whether to cancel touches on the underlying view
+        /// 
+        /// Default: <value>true</value>
+        /// </summary>
+        /// <param name="cancelsTouchesInView"><see cref="bool"/></param>
+        /// <returns><see cref="ALRadialMenu"/> for method chaining.</returns>
+        public ALRadialMenu SetOverlayCancelsTouchesInView(bool cancelsTouchesInView)
+        {
+            _overlayCancelsTouchesInView = cancelsTouchesInView;
+            _dismissGesture.CancelsTouchesInView = _overlayCancelsTouchesInView;
+            _overlayView.PassThroughTouchEvents = !_overlayCancelsTouchesInView;
+
+            return this;
+        }
+
+        /// <summary>
         /// Set the radius to present the menu in.
         /// 
         /// Default: <value>100</value>
@@ -147,7 +195,7 @@ namespace DK.Ostebaronen.Touch.RadialMenu
         /// <returns><see cref="ALRadialMenu"/> for method chaining.</returns>
         public ALRadialMenu SetStartAngle(float degrees)
         {
-            _startAngle = new Angle { Degrees = degrees };
+            StartAngle = new Angle { Degrees = degrees };
             return this;
         }
 
@@ -228,6 +276,8 @@ namespace DK.Ostebaronen.Touch.RadialMenu
             return this;
         }
 
+        private void InternalDismiss() => Dismiss();
+
         private void Dismiss(int selectedIndex)
         {
             _overlayView.RemoveFromSuperview();
@@ -243,7 +293,13 @@ namespace DK.Ostebaronen.Touch.RadialMenu
 
         private void PresentAnimation(UIView view, int index)
         {
-            var degrees = _startAngle.Degrees + _spacingDegrees.Degrees * index;
+            if (PresentButtonAnimation != null)
+            {
+                PresentButtonAnimation.Invoke(view, index);
+                return;
+            }
+
+            var degrees = StartAngle.Degrees + Spacing.Degrees * index;
             var newCenter = PointOnCircumference(_animationOrigin, _radius, new Angle { Degrees = degrees });
             var delay = index * _delay;
 
@@ -257,6 +313,12 @@ namespace DK.Ostebaronen.Touch.RadialMenu
 
         private void DismissAnimation(UIView view, int index)
         {
+            if (DismissButtonAnimation != null)
+            {
+                DismissButtonAnimation.Invoke(view, index);
+                return;
+            }
+
             var delay = index * _delay;
 
             AnimateNotify(0.5, delay, 0.7f, 0.7f, AnimationOptions,
@@ -270,6 +332,12 @@ namespace DK.Ostebaronen.Touch.RadialMenu
 
         private void SelectedAnimation(UIView view)
         {
+            if (SelectedButtonAnimation != null)
+            {
+                SelectedButtonAnimation.Invoke(view);
+                return;
+            }
+
             AnimateNotify(0.5, 0, 0.7f, 0.7f, AnimationOptions,
                 () => {
                     view.Alpha = 0;
@@ -282,7 +350,7 @@ namespace DK.Ostebaronen.Touch.RadialMenu
 
         private static CGPoint PointOnCircumference(CGPoint origin, float radius, Angle angle)
         {
-            var radians = angle.ToRadians();
+            var radians = angle.Radians;
             var x = origin.X + radius * Math.Cos(radians);
             var y = origin.Y + radius * Math.Sin(radians);
 
@@ -297,13 +365,32 @@ namespace DK.Ostebaronen.Touch.RadialMenu
             if (Circumference.Degrees < 360)
                 count--;
 
-            _spacingDegrees = new Angle { Degrees = Circumference.Degrees / count };
+            Spacing = new Angle { Degrees = Circumference.Degrees / count };
         }
 
         protected override void Dispose(bool disposing)
         {
             if (disposing)
-                _orientationToken.Dispose();
+            {
+                _orientationToken?.Dispose();
+
+                if (_overlayView != null)
+                {
+                    _overlayView.RemoveFromSuperview();
+                    _overlayView.RemoveGestureRecognizer(_dismissGesture);
+                    _overlayView.Dispose();
+                }
+
+                _dismissGesture?.Dispose();
+
+                foreach (var button in Buttons.ToArray())
+                {
+                    if (button.Superview != null)
+                        button.RemoveFromSuperview();
+
+                    button.Dispose();
+                }
+            }
 
             base.Dispose(disposing);
         }
