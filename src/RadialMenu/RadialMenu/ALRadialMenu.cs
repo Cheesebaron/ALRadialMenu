@@ -12,6 +12,16 @@ namespace DK.Ostebaronen.Touch.RadialMenu
     [Preserve(AllMembers = true)]
     public class ALRadialMenu : UIButton
     {
+        /// <summary>
+        /// This event is invoked whenever the menu is dismissed.
+        /// </summary>
+        public event EventHandler OnDismissing;
+
+        /// <summary>
+        /// This event is invoked when the menu is starting its animation.
+        /// </summary>
+        public event EventHandler OnShowing;
+
         private UITapGestureRecognizer _dismissGesture;
         private bool _dismissOnOverlayTap = true;
         private bool _overlayCancelsTouchesInView = true;
@@ -73,15 +83,12 @@ namespace DK.Ostebaronen.Touch.RadialMenu
         public Action<UIView> SelectedButtonAnimation { get; set; }
 
         /// <summary>
-        /// This event is invoked whenever the menue is dismissed.
+        /// Get wheter the menu is currently showing.
+        /// 
+        /// This will be false when animation of the last button has finished.
+        /// This will be true when the animation of the first button has started.
         /// </summary>
-        public event EventHandler OnDismissing;
-
-        /// <summary>
-        /// This property is an indicator to wether the radial menu is currently unfolded or not.
-        /// The property will only display false when the animation of the last button has finished and true once the animation of the first button starts.
-        /// </summary>
-        public bool IsUnfolded { get; private set; }
+        public bool IsShowing { get; private set; }
 
         public ALRadialMenu() : this(CGRect.Empty) { }
 
@@ -267,10 +274,12 @@ namespace DK.Ostebaronen.Touch.RadialMenu
                 return this;
             }
 
-            if (IsUnfolded)
+            if (IsShowing)
                 return this;
 
-            IsUnfolded = true;
+            OnShowing?.Invoke(this, EventArgs.Empty);
+            IsShowing = true;
+
             if (_animationOrigin.IsEmpty)
                 _animationOrigin = Center;
 
@@ -295,13 +304,10 @@ namespace DK.Ostebaronen.Touch.RadialMenu
         {
             if (Buttons == null || Buttons.Count == 0)
             {
-                IsUnfolded = false;
+                IsShowing = false;
                 Debug.WriteLine("ALRadialMenu has no buttons to present");
                 return this;
             }
-
-            if (IsUnfolded)
-                OnDismissing?.Invoke(this, null);
 
             Dismiss(-1);
 
@@ -312,6 +318,9 @@ namespace DK.Ostebaronen.Touch.RadialMenu
 
         private void Dismiss(int selectedIndex)
         {
+            if (IsShowing)
+                OnDismissing?.Invoke(this, null);
+
             _overlayView.RemoveFromSuperview();
 
             for (var i = 0; i < Buttons.Count; i++)
@@ -365,7 +374,7 @@ namespace DK.Ostebaronen.Touch.RadialMenu
                 {
                     view.RemoveFromSuperview();
                     if (index == Buttons.Count - 1)
-                        IsUnfolded = false;
+                        IsShowing = false;
                 });
         }
 
