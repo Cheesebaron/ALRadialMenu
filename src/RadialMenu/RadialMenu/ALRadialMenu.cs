@@ -257,6 +257,9 @@ namespace DK.Ostebaronen.Touch.RadialMenu
                 return this;
             }
 
+            if (IsUnfolded)
+                return this;
+
             IsUnfolded = true;
             if (_animationOrigin.IsEmpty)
                 _animationOrigin = Center;
