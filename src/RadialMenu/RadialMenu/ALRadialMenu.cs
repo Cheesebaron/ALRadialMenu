@@ -72,6 +72,17 @@ namespace DK.Ostebaronen.Touch.RadialMenu
         /// </summary>
         public Action<UIView> SelectedButtonAnimation { get; set; }
 
+        /// <summary>
+        /// This event is invoked whenever the menue is dismissed.
+        /// </summary>
+        public event EventHandler OnDismissing;
+
+        /// <summary>
+        /// This property is an indicator to wether the radial menu is currently unfolded or not.
+        /// The property will only display false when the animation of the last button has finished and true once the animation of the first button starts.
+        /// </summary>
+        public bool IsUnfolded { get; private set; }
+
         public ALRadialMenu() : this(CGRect.Empty) { }
 
         public ALRadialMenu(CGRect frame) : base(frame)
@@ -100,10 +111,12 @@ namespace DK.Ostebaronen.Touch.RadialMenu
                 CancelsTouchesInView = _overlayCancelsTouchesInView
             };
 
-            _overlayView = new PassThroughView(UIScreen.MainScreen.Bounds) {
+            _overlayView = new PassThroughView(UIScreen.MainScreen.Bounds)
+            {
                 PassThroughTouchEvents = !_overlayCancelsTouchesInView
             };
             _overlayView.AddGestureRecognizer(_dismissGesture);
+            _overlayView.OnOverlayPointInside += OverlayView_OnOverlayPointInside;
         }
 
         /// <summary>
@@ -133,7 +146,8 @@ namespace DK.Ostebaronen.Touch.RadialMenu
 
                 var action = button.Action;
                 var index = i;
-                button.Action = () => {
+                button.Action = () =>
+                {
                     Dismiss(index);
                     action?.Invoke();
                 };
@@ -243,6 +257,7 @@ namespace DK.Ostebaronen.Touch.RadialMenu
                 return this;
             }
 
+            IsUnfolded = true;
             if (_animationOrigin.IsEmpty)
                 _animationOrigin = Center;
 
@@ -267,9 +282,13 @@ namespace DK.Ostebaronen.Touch.RadialMenu
         {
             if (Buttons == null || Buttons.Count == 0)
             {
+                IsUnfolded = false;
                 Debug.WriteLine("ALRadialMenu has no buttons to present");
                 return this;
             }
+
+            if (IsUnfolded)
+                OnDismissing?.Invoke(this, null);
 
             Dismiss(-1);
 
@@ -305,10 +324,13 @@ namespace DK.Ostebaronen.Touch.RadialMenu
 
             view.Center = _animationOrigin;
             view.Alpha = 0;
-            AnimateNotify(0.5, delay, 0.7f, 0.7f, AnimationOptions, () => {
+            AnimateNotify(0.5, delay, 0.7f, 0.7f, AnimationOptions, () =>
+            {
                 view.Alpha = 1;
                 view.Center = newCenter;
-            }, null);
+            }, finished =>
+            {
+            });
         }
 
         private void DismissAnimation(UIView view, int index)
@@ -322,11 +344,15 @@ namespace DK.Ostebaronen.Touch.RadialMenu
             var delay = index * _delay;
 
             AnimateNotify(0.5, delay, 0.7f, 0.7f, AnimationOptions,
-                () => {
+                () =>
+                {
                     view.Alpha = 0;
                     view.Center = _animationOrigin;
-                }, finished => {
+                }, finished =>
+                {
                     view.RemoveFromSuperview();
+                    if (index == Buttons.Count - 1)
+                        IsUnfolded = false;
                 });
         }
 
@@ -339,13 +365,21 @@ namespace DK.Ostebaronen.Touch.RadialMenu
             }
 
             AnimateNotify(0.5, 0, 0.7f, 0.7f, AnimationOptions,
-                () => {
+                () =>
+                {
                     view.Alpha = 0;
                     view.Transform = CGAffineTransform.MakeScale(1.5f, 1.5f);
-                }, finished => {
+                }, finished =>
+                {
                     view.Transform = CGAffineTransform.MakeIdentity();
                     view.RemoveFromSuperview();
                 });
+        }
+
+        private void OverlayView_OnOverlayPointInside(CGPoint point, UIEvent uievent)
+        {
+            if (_dismissOnOverlayTap)
+                InternalDismiss();
         }
 
         private static CGPoint PointOnCircumference(CGPoint origin, float radius, Angle angle)
