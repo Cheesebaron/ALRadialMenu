@@ -101,9 +101,13 @@ namespace DK.Ostebaronen.Touch.RadialMenu
             _dismissGesture?.Dispose();
             _dismissGesture = null;
 
-            _overlayView?.RemoveFromSuperview();
-            _overlayView?.Dispose();
-            _overlayView = null;
+            if (_overlayView != null)
+            {
+                _overlayView.OnPointInside -= OnPointInside;
+                _overlayView.RemoveFromSuperview();
+                _overlayView.Dispose();
+                _overlayView = null;
+            }
 
             _dismissGesture = new UITapGestureRecognizer(InternalDismiss)
             {
@@ -116,7 +120,13 @@ namespace DK.Ostebaronen.Touch.RadialMenu
                 PassThroughTouchEvents = !_overlayCancelsTouchesInView
             };
             _overlayView.AddGestureRecognizer(_dismissGesture);
-            _overlayView.OnOverlayPointInside += OverlayView_OnOverlayPointInside;
+            _overlayView.OnPointInside += OnPointInside;
+        }
+
+        private void OnPointInside(object sender, EventArgs e)
+        {
+            if (_dismissOnOverlayTap)
+                InternalDismiss();
         }
 
         /// <summary>
@@ -379,12 +389,6 @@ namespace DK.Ostebaronen.Touch.RadialMenu
                 });
         }
 
-        private void OverlayView_OnOverlayPointInside(CGPoint point, UIEvent uievent)
-        {
-            if (_dismissOnOverlayTap)
-                InternalDismiss();
-        }
-
         private static CGPoint PointOnCircumference(CGPoint origin, float radius, Angle angle)
         {
             var radians = angle.Radians;
@@ -413,6 +417,7 @@ namespace DK.Ostebaronen.Touch.RadialMenu
 
                 if (_overlayView != null)
                 {
+                    _overlayView.OnPointInside -= OnPointInside;
                     _overlayView.RemoveFromSuperview();
                     _overlayView.RemoveGestureRecognizer(_dismissGesture);
                     _overlayView.Dispose();
