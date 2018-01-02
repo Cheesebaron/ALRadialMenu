@@ -1,3 +1,6 @@
+### New in 0.2.0
+* Bug fixes to passing through events
+* Added events and properties to provide the state of the menu
 ### New in 0.1.0
 * Pass through touch events through overlay
 * Make animation actions public properties
