@@ -39,7 +39,8 @@ Task("UpdateAppVeyorBuildNumber")
     .WithCriteria(() => AppVeyor.IsRunningOnAppVeyor)
     .Does(() =>
 {
-    AppVeyor.UpdateBuildVersion(versionInfo.FullBuildMetaData);
+    AppVeyor.UpdateBuildVersion(AppVeyor.Environment.JobId +
+        versionInfo.InformationalVersion);
 });
 
 FilePath msBuildPath;
