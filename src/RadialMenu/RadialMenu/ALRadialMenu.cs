@@ -12,6 +12,16 @@ namespace DK.Ostebaronen.Touch.RadialMenu
     [Preserve(AllMembers = true)]
     public class ALRadialMenu : UIButton
     {
+        /// <summary>
+        /// This event is invoked whenever the menu is dismissed.
+        /// </summary>
+        public event EventHandler OnDismissing;
+
+        /// <summary>
+        /// This event is invoked when the menu is starting its animation.
+        /// </summary>
+        public event EventHandler OnShowing;
+
         private UITapGestureRecognizer _dismissGesture;
         private bool _dismissOnOverlayTap = true;
         private bool _overlayCancelsTouchesInView = true;
@@ -72,6 +82,14 @@ namespace DK.Ostebaronen.Touch.RadialMenu
         /// </summary>
         public Action<UIView> SelectedButtonAnimation { get; set; }
 
+        /// <summary>
+        /// Get wheter the menu is currently showing.
+        /// 
+        /// This will be false when animation of the last button has finished.
+        /// This will be true when the animation of the first button has started.
+        /// </summary>
+        public bool IsShowing { get; private set; }
+
         public ALRadialMenu() : this(CGRect.Empty) { }
 
         public ALRadialMenu(CGRect frame) : base(frame)
@@ -90,9 +108,13 @@ namespace DK.Ostebaronen.Touch.RadialMenu
             _dismissGesture?.Dispose();
             _dismissGesture = null;
 
-            _overlayView?.RemoveFromSuperview();
-            _overlayView?.Dispose();
-            _overlayView = null;
+            if (_overlayView != null)
+            {
+                _overlayView.OnPointInside -= OnPointInside;
+                _overlayView.RemoveFromSuperview();
+                _overlayView.Dispose();
+                _overlayView = null;
+            }
 
             _dismissGesture = new UITapGestureRecognizer(InternalDismiss)
             {
@@ -100,10 +122,18 @@ namespace DK.Ostebaronen.Touch.RadialMenu
                 CancelsTouchesInView = _overlayCancelsTouchesInView
             };
 
-            _overlayView = new PassThroughView(UIScreen.MainScreen.Bounds) {
+            _overlayView = new PassThroughView(UIScreen.MainScreen.Bounds)
+            {
                 PassThroughTouchEvents = !_overlayCancelsTouchesInView
             };
             _overlayView.AddGestureRecognizer(_dismissGesture);
+            _overlayView.OnPointInside += OnPointInside;
+        }
+
+        private void OnPointInside(object sender, EventArgs e)
+        {
+            if (_dismissOnOverlayTap)
+                InternalDismiss();
         }
 
         /// <summary>
@@ -133,7 +163,8 @@ namespace DK.Ostebaronen.Touch.RadialMenu
 
                 var action = button.Action;
                 var index = i;
-                button.Action = () => {
+                button.Action = () =>
+                {
                     Dismiss(index);
                     action?.Invoke();
                 };
@@ -243,6 +274,12 @@ namespace DK.Ostebaronen.Touch.RadialMenu
                 return this;
             }
 
+            if (IsShowing)
+                return this;
+
+            OnShowing?.Invoke(this, EventArgs.Empty);
+            IsShowing = true;
+
             if (_animationOrigin.IsEmpty)
                 _animationOrigin = Center;
 
@@ -267,6 +304,7 @@ namespace DK.Ostebaronen.Touch.RadialMenu
         {
             if (Buttons == null || Buttons.Count == 0)
             {
+                IsShowing = false;
                 Debug.WriteLine("ALRadialMenu has no buttons to present");
                 return this;
             }
@@ -280,6 +318,9 @@ namespace DK.Ostebaronen.Touch.RadialMenu
 
         private void Dismiss(int selectedIndex)
         {
+            if (IsShowing)
+                OnDismissing?.Invoke(this, null);
+
             _overlayView.RemoveFromSuperview();
 
             for (var i = 0; i < Buttons.Count; i++)
@@ -305,10 +346,13 @@ namespace DK.Ostebaronen.Touch.RadialMenu
 
             view.Center = _animationOrigin;
             view.Alpha = 0;
-            AnimateNotify(0.5, delay, 0.7f, 0.7f, AnimationOptions, () => {
+            AnimateNotify(0.5, delay, 0.7f, 0.7f, AnimationOptions, () =>
+            {
                 view.Alpha = 1;
                 view.Center = newCenter;
-            }, null);
+            }, finished =>
+            {
+            });
         }
 
         private void DismissAnimation(UIView view, int index)
@@ -322,11 +366,15 @@ namespace DK.Ostebaronen.Touch.RadialMenu
             var delay = index * _delay;
 
             AnimateNotify(0.5, delay, 0.7f, 0.7f, AnimationOptions,
-                () => {
+                () =>
+                {
                     view.Alpha = 0;
                     view.Center = _animationOrigin;
-                }, finished => {
+                }, finished =>
+                {
                     view.RemoveFromSuperview();
+                    if (index == Buttons.Count - 1)
+                        IsShowing = false;
                 });
         }
 
@@ -339,10 +387,12 @@ namespace DK.Ostebaronen.Touch.RadialMenu
             }
 
             AnimateNotify(0.5, 0, 0.7f, 0.7f, AnimationOptions,
-                () => {
+                () =>
+                {
                     view.Alpha = 0;
                     view.Transform = CGAffineTransform.MakeScale(1.5f, 1.5f);
-                }, finished => {
+                }, finished =>
+                {
                     view.Transform = CGAffineTransform.MakeIdentity();
                     view.RemoveFromSuperview();
                 });
@@ -376,6 +426,7 @@ namespace DK.Ostebaronen.Touch.RadialMenu
 
                 if (_overlayView != null)
                 {
+                    _overlayView.OnPointInside -= OnPointInside;
                     _overlayView.RemoveFromSuperview();
                     _overlayView.RemoveGestureRecognizer(_dismissGesture);
                     _overlayView.Dispose();
