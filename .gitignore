@@ -197,3 +197,5 @@ FakesAssemblies/
 
 # Cake
 tools/
+src/RadialMenu/.idea
+.idea
